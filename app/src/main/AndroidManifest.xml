@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      No QUERY_ALL_PACKAGES: a home-screen launcher is allowed to enumerate
+      apps that expose a MAIN/LAUNCHER activity without that sensitive
+      permission, which is all this app needs.
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_app_hidra"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/ic_app_hidra"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.HidrA">
+
+        <!--
+          MainActivity is the real home screen (HOME + DEFAULT). It carries no
+          MAIN/LAUNCHER filter itself; the drawer icon/label come from exactly
+          one enabled activity-alias below, which is how the app changes its
+          own name and icon at runtime.
+        -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:stateNotNeeded="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- Disguise identity: default. Exactly one alias is enabled at a time. -->
+        <activity-alias
+            android:name=".alias.Default"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@drawable/ic_app_hidra"
+            android:label="@string/app_name"
+            android:roundIcon="@drawable/ic_app_hidra"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".alias.Calculator"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_app_calculator"
+            android:label="@string/disguise_calculator"
+            android:roundIcon="@drawable/ic_app_calculator"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".alias.Notes"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_app_notes"
+            android:label="@string/disguise_notes"
+            android:roundIcon="@drawable/ic_app_notes"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+    </application>
+
+</manifest>
