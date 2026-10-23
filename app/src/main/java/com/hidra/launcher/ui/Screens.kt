@@ -1,5 +1,7 @@
 package com.hidra.launcher.ui
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -19,18 +23,21 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import com.hidra.launcher.data.AppInfo
 import com.hidra.launcher.data.Disguise
+import com.hidra.launcher.shizuku.ShizukuController
 
 @Composable
 fun HiddenScreen(
@@ -60,7 +67,7 @@ fun HiddenScreen(
             Text("No hidden apps.", color = MaterialTheme.colorScheme.onBackground)
             Spacer(Modifier.height(8.dp))
             Text(
-                "Long-press any app on the home grid and turn on \"Hide from drawer\".",
+                "Long-press any app on the home grid and turn on \"Hide app\".",
                 style = MaterialTheme.typography.bodySmall,
             )
             Spacer(Modifier.height(16.dp))
@@ -147,9 +154,12 @@ fun SettingsScreen(
     var changingPin by remember { mutableStateOf(false) }
 
     Column(
-        Modifier.fillMaxSize().padding(20.dp),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        ShizukuSection()
+
+        Spacer(Modifier.height(8.dp))
         Text("App identity", style = MaterialTheme.typography.titleMedium)
         Text(
             "Change how THIS launcher appears in the app drawer. The chosen icon " +
@@ -193,10 +203,12 @@ fun SettingsScreen(
                 Spacer(Modifier.height(6.dp))
                 Text(
                     "Renaming or re-iconing another app only changes how it looks " +
-                        "inside HidR-A. The app's real name and icon elsewhere on the " +
-                        "device are unchanged. Hiding removes an app from this " +
-                        "launcher's grid only; it stays installed and visible to other " +
-                        "launchers and in Android Settings.",
+                        "inside HidR-A; its real name and icon elsewhere are unchanged. " +
+                        "With Shizuku ready, hiding disables the app so it vanishes from " +
+                        "every launcher and app drawer. It stays installed, and Android's " +
+                        "Settings > Apps can still list it as disabled. While a hidden " +
+                        "app is open it is enabled; it is disabled again when you return " +
+                        "to HidR-A, which also stops it running in the background.",
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -216,6 +228,61 @@ fun SettingsScreen(
             },
             dismissButton = { TextButton(onClick = { changingPin = false }) { Text("Cancel") } },
         )
+    }
+}
+
+@Composable
+private fun ShizukuSection() {
+    val status by ShizukuController.status.collectAsState()
+    val context = LocalContext.current
+
+    Text("Hide apps everywhere", style = MaterialTheme.typography.titleMedium)
+    Text(
+        "To remove an app from every launcher, HidR-A disables it through Shizuku, " +
+            "a free helper app. One-time setup, no root needed. After a phone restart " +
+            "you must start Shizuku again before you can open hidden apps.",
+        style = MaterialTheme.typography.bodySmall,
+    )
+    Card {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            when (status) {
+                ShizukuController.Status.NotInstalled -> {
+                    Text("Step 1: install Shizuku.")
+                    Button(onClick = {
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, Uri.parse("https://shizuku.rikka.app/download/"))
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                        )
+                    }) { Text("Get Shizuku") }
+                }
+
+                ShizukuController.Status.NotRunning -> {
+                    Text(
+                        "Step 2: open Shizuku and start it. On Android 11+ choose " +
+                            "\"Start via Wireless debugging\" and follow its steps.",
+                    )
+                    Button(onClick = {
+                        context.packageManager
+                            .getLaunchIntentForPackage(ShizukuController.SHIZUKU_PACKAGE)
+                            ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            ?.let(context::startActivity)
+                    }) { Text("Open Shizuku") }
+                }
+
+                ShizukuController.Status.NeedsPermission -> {
+                    Text("Step 3: allow HidR-A to use Shizuku.")
+                    Button(onClick = { ShizukuController.requestPermission() }) {
+                        Text("Allow HidR-A")
+                    }
+                }
+
+                ShizukuController.Status.Connecting -> Text("Connecting to Shizuku…")
+
+                ShizukuController.Status.Ready ->
+                    Text("Ready. Apps you hide are now disabled system-wide.")
+            }
+            OutlinedButton(onClick = { ShizukuController.refresh() }) { Text("Re-check") }
+        }
     }
 }
 

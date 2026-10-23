@@ -15,10 +15,14 @@ Android (without root) deliberately limits what one app can do to another:
 - **Renaming / re-iconing another app affects this launcher's UI only.** The
   app's real name and icon everywhere else on the device are untouched. No app
   can rewrite another app's manifest.
-- **Hiding removes an app from *this* launcher's grid only.** The app stays
-  installed and remains visible to other launchers, in the Settings app, and in
-  the system share/app pickers. There is no root-free way to hide an app from
-  the whole OS, and HidR-A does not attempt one.
+- **Hiding everywhere needs [Shizuku](https://shizuku.rikka.app/).** With
+  Shizuku running and allowed, hiding an app *disables* it (`pm disable-user`),
+  so it disappears from every launcher and app drawer. Opening it from the
+  PIN-protected Hidden list re-enables it; returning to HidR-A disables it again
+  (which also stops it running in the background). Disabled apps can still be
+  listed in Android Settings > Apps, and Shizuku must be restarted after each
+  phone reboot before hidden apps can be opened. Without Shizuku, hiding only
+  removes the app from HidR-A's own grid.
 - **Changing HidR-A's own icon/name** is the one change that is truly
   system-wide, and it works because an app *is* allowed to re-brand itself, via
   manifest `activity-alias` entries toggled at runtime.
@@ -32,7 +36,7 @@ and customizing **your own** device.
 |---|---|
 | List apps | `PackageManager.queryIntentActivities` for `MAIN`/`LAUNCHER` (a home app needs no `QUERY_ALL_PACKAGES`). |
 | Rename / borrow icon | Per-app override stored locally; applied only when this launcher draws the grid. |
-| Hide + vault | Override flag filters the app out of the grid; the Hidden screen is gated by a SHA-256 PIN. |
+| Hide + vault | Override flag filters the app out of the grid and, with Shizuku, disables it system-wide; the Hidden screen is gated by a SHA-256 PIN. Name/icon/entry activity of hidden apps are cached in `HiddenStore` because disabled apps no longer resolve. |
 | Self icon/name | `DisguiseManager` enables one `activity-alias` and disables the others via `setComponentEnabledSetting`. |
 
 ## Build it yourself

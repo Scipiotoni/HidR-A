@@ -25,6 +25,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.hidra.launcher.data.AppInfo
 import com.hidra.launcher.data.Override
+import com.hidra.launcher.shizuku.ShizukuController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,12 +91,18 @@ fun EditAppSheet(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Hide from drawer", modifier = Modifier.weight(1f))
+                Text("Hide app", modifier = Modifier.weight(1f))
                 Switch(checked = hidden, onCheckedChange = { hidden = it })
             }
+            val shizuku by ShizukuController.status.collectAsState()
             Text(
-                "Hidden apps stay installed and are reachable from the PIN-protected " +
-                    "Hidden list inside this launcher.",
+                if (shizuku == ShizukuController.Status.Ready) {
+                    "Hidden everywhere on this phone. Open it from the PIN-protected " +
+                        "Hidden list in HidR-A."
+                } else {
+                    "Only hidden inside HidR-A for now. Finish the Shizuku setup in " +
+                        "Settings to hide it everywhere."
+                },
                 style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
             )
 

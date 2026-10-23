@@ -24,6 +24,8 @@ data class AppInfo(
     val systemIcon: ImageBitmap,
     val override: Override = Override(),
     val displayIcon: ImageBitmap = systemIcon,
+    /** True when the app is disabled system-wide and only known from the hidden cache. */
+    val frozen: Boolean = false,
 ) {
     val key: String get() = "$packageName/$className"
     val displayLabel: String get() = override.customLabel?.takeIf { it.isNotBlank() } ?: systemLabel
